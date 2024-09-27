@@ -37,29 +37,22 @@ for epoca = 1:100000
         // Camada oculta 1
         y1 = x * wp; // [1x3] * [3x3] = [1x3]
         y1 = 1 ./ (1 + exp(-y1)); // Função sigmoide
-        y1d = 1 - y1.^2; // Derivada da função sigmoide
+        y1d = y1 .* (1 - y1); // Derivada correta da função sigmoide
         
         // Camada oculta 2
         y2 = [ -1 y1 ] * ws; // [1x4] * [4x3] = [1x3]
         y2 = 1 ./ (1 + exp(-y2)); // Função sigmoide
-        y2d = 1 - y2.^2; // Derivada da função sigmoide
+        y2d = y2 .* (1 - y2); // Derivada correta da função sigmoide
         
         // Camada de saída
         yo = [ -1 y2 ] * wo; // [1x4] * [4x1] = [1x1]
         yo = 1 / (1 + exp(-yo)); // Função sigmoide
-        yod = 1 - yo^2; // Derivada da função sigmoide
+        yod = yo .* (1 - yo); // Derivada correta da função sigmoide
         
         // Cálculo dos deltas (erros)
         Do = tg - yo; // [1x1]
         Ds = Do * wo(2:nns + 1)'; // [1x1] * [3x1]' = [1x3]
         Dp = Ds * wp'; // [1x3] * [3x3] = [1x3]
-        
-        // Verificação das dimensões antes da operação .*
-        disp("Dimensão de y1d:");
-        disp(size(y1d)); // Deve mostrar [1, 3]
-        
-        disp("Dimensão de Dp:");
-        disp(size(Dp)); // Deve mostrar [1, 3]
         
         // Atualização dos pesos
         // Camada de saída
