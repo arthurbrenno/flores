@@ -52,7 +52,7 @@ for epoca = 1:100000
         // Cálculo dos deltas (erros)
         Do = tg - yo; // [1x1]
         Ds = Do * wo(2:nns + 1)'; // [1x1] * [3x1]' = [1x3]
-        Dp = Ds * wp(2:nep, :)'; // [1x3] * [3x3]' = [1x3]
+        Dp = Ds * wp'; // [1x3] * [3x3] = [1x3]
         
         // Atualização dos pesos
         // Camada de saída
@@ -60,20 +60,15 @@ for epoca = 1:100000
         wo = wo + wod'; // [4x1] + [4x1] = [4x1]
         
         // Camada oculta 2
-        wsd = [ -1 y1 ]' * ( n * y2d .* Ds ) ; // [4x1] * [1x3] = [4x3]
+        wsd = [ -1 y1 ]' * ( n * y2d .* Ds ); // [4x1] * [1x3] = [4x3]
         ws = ws + wsd;
         
         // Camada oculta 1
-        wpd = [ -1 x ]' * ( n * y1d .* Dp ); // [3x1] * [1x3] = [3x3]
+        wpd = x' * ( n * y1d .* Dp ); // [3x1] * [1x3] = [3x3]
         wp = wp + wpd;
         
         // Exibir a saída atual (opcional)
         // disp(yo);
-    end
-    
-    // (Opcional) Exibir progresso a cada 10000 épocas
-    if mod(epoca, 10000) == 0 then
-        disp("Época: " + string(epoca));
     end
 end
 
