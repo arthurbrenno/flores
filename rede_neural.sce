@@ -23,9 +23,9 @@ wo = rand(nns + 1, 1); // [4x1]
 
 // Verificação das dimensões iniciais
 disp("Dimensões Iniciais:");
-disp("wp: " + string(size(wp)));
-disp("ws: " + string(size(ws)));
-disp("wo: " + string(size(wo)));
+disp("wp: " + string(size(wp))); // Deve mostrar [3, 3]
+disp("ws: " + string(size(ws))); // Deve mostrar [4, 3]
+disp("wo: " + string(size(wo))); // Deve mostrar [4, 1]
 
 // Treinamento da rede neural
 for epoca = 1:100000
@@ -54,6 +54,13 @@ for epoca = 1:100000
         Ds = Do * wo(2:nns + 1)'; // [1x1] * [3x1]' = [1x3]
         Dp = Ds * wp'; // [1x3] * [3x3] = [1x3]
         
+        // Verificação das dimensões antes da operação .*
+        disp("Dimensão de y1d:");
+        disp(size(y1d)); // Deve mostrar [1, 3]
+        
+        disp("Dimensão de Dp:");
+        disp(size(Dp)); // Deve mostrar [1, 3]
+        
         // Atualização dos pesos
         // Camada de saída
         wod = n * yod * Do * [ -1 y2 ]; // [1x1] * [1x1] * [1x4] = [1x4]
@@ -69,6 +76,11 @@ for epoca = 1:100000
         
         // Exibir a saída atual (opcional)
         // disp(yo);
+    end
+    
+    // (Opcional) Exibir progresso a cada 10000 épocas
+    if modulo(epoca, 10000) == 0 then
+        disp("Época: " + string(epoca));
     end
 end
 
