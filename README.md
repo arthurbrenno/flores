@@ -21,355 +21,51 @@ exec('rede_neural.sce', -1);
 
 # Explicação do Código e do Algoritmo
 
-## Explicação Completa
+# Implementação de uma Rede Neural Feedforward com Algoritmo de Backpropagation em Scilab
 
-### Sumário
+## Sumário
 
 - [Introdução](#introdução)
 - [Descrição Geral do Algoritmo](#descrição-geral-do-algoritmo)
-- [Estrutura do Código](#estrutura-do-código)
+- [Código Completo](#código-completo)
+- [Explicação Detalhada do Código e do Algoritmo](#explicação-detalhada-do-código-e-do-algoritmo)
   - [1. Preparação do Ambiente](#1-preparação-do-ambiente)
   - [2. Carregamento dos Dados](#2-carregamento-dos-dados)
   - [3. Definição dos Parâmetros da Rede Neural](#3-definição-dos-parâmetros-da-rede-neural)
   - [4. Inicialização dos Pesos](#4-inicialização-dos-pesos)
   - [5. Treinamento da Rede Neural](#5-treinamento-da-rede-neural)
-    - [5.1. Forward Pass](#51-forward-pass)
-    - [5.2. Cálculo dos Erros e Deltas](#52-cálculo-dos-erros-e-deltas)
-    - [5.3. Backpropagation e Atualização dos Pesos](#53-backpropagation-e-atualização-dos-pesos)
+    - [5.1. Forward Pass (Propagação para Frente)](#51-forward-pass-propagação-para-frente)
+    - [5.2. Backpropagation (Retropropagação do Erro)](#52-backpropagation-retropropagação-do-erro)
+    - [5.3. Atualização dos Pesos](#53-atualização-dos-pesos)
   - [6. Teste da Rede Neural](#6-teste-da-rede-neural)
-- [Detalhes do Algoritmo](#detalhes-do-algoritmo)
+- [Explicação Matemática Passo a Passo](#explicação-matemática-passo-a-passo)
   - [A. Forward Pass Detalhado](#a-forward-pass-detalhado)
   - [B. Backpropagation Detalhado](#b-backpropagation-detalhado)
+  - [C. Atualização dos Pesos Detalhada](#c-atualização-dos-pesos-detalhada)
 - [Considerações Finais](#considerações-finais)
+- [Referências](#referências)
 
 ---
 
-### Introdução
+## Introdução
 
-Este documento fornece uma explicação completa do código de uma rede neural feedforward com duas camadas ocultas implementada em Scilab. O objetivo é permitir que você compreenda cada parte do código e como o algoritmo de treinamento (backpropagation) funciona em detalhes.
+Este documento apresenta a implementação de uma **rede neural feedforward** com duas camadas ocultas em **Scilab**, utilizando o algoritmo de **Backpropagation** para o treinamento. O objetivo é fornecer um entendimento completo do código e do algoritmo, incluindo explicações matemáticas detalhadas e passo a passo.
 
 ---
 
-### Descrição Geral do Algoritmo
+## Descrição Geral do Algoritmo
 
-A rede neural implementada é uma rede feedforward com:
+A rede neural implementada é composta por:
 
 - **Uma camada de entrada**
 - **Duas camadas ocultas**
 - **Uma camada de saída**
 
-O treinamento da rede é realizado usando o algoritmo de **backpropagation**, que ajusta os pesos da rede para minimizar o erro entre a saída prevista e o alvo desejado.
+O algoritmo de **Backpropagation** é utilizado para treinar a rede, ajustando os pesos para minimizar o erro entre a saída prevista e o alvo desejado.
 
 ---
 
-### Estrutura do Código
-
-#### 1. Preparação do Ambiente
-
-```scilab
-// Limpar variáveis e console
-clear;
-clc;
-```
-
-- **`clear;`**: Remove todas as variáveis do ambiente de trabalho.
-- **`clc;`**: Limpa a janela de comando.
-
-#### 2. Carregamento dos Dados
-
-```scilab
-// Carregar dados a partir de um arquivo externo
-dados = csvRead('dados.csv');
-```
-
-- **`csvRead('dados.csv');`**: Lê os dados do arquivo `dados.csv` e armazena na variável `dados`.
-- **Formato esperado do arquivo `dados.csv`:**
-  - A primeira coluna é o **bias** (`-1`).
-  - As colunas seguintes são as **features** (entradas).
-  - A última coluna é o **alvo** (saída desejada).
-
-#### 3. Definição dos Parâmetros da Rede Neural
-
-```scilab
-// Determinar o número de entradas e saídas automaticamente
-na = size(dados, 1); // Número de amostras
-nc = size(dados, 2); // Número de colunas no arquivo de dados
-
-// Como o bias está incluído nos dados, o número de entradas é:
-nep = nc - 1; // Número de entradas (incluindo o bias)
-
-// Definir o número de neurônios nas camadas ocultas
-nnp = floor((nep + 1) * 1.5); // Número de neurônios na camada oculta 1
-nns = floor(nnp * 0.8); // Número de neurônios na camada oculta 2
-
-// Número de saídas
-nos = 1; // Assumindo uma única saída
-
-// Taxa de aprendizagem
-n = 0.6;
-```
-
-- **`na`**: Número de amostras nos dados.
-- **`nc`**: Número de colunas nos dados.
-- **`nep`**: Número de entradas, incluindo o bias.
-- **`nnp`**: Número de neurônios na camada oculta 1. Calculado automaticamente.
-- **`nns`**: Número de neurônios na camada oculta 2. Calculado automaticamente.
-- **`nos`**: Número de saídas. Aqui, está definido como 1.
-- **`n`**: Taxa de aprendizagem usada na atualização dos pesos.
-
-#### 4. Inicialização dos Pesos
-
-```scilab
-// Inicialização dos pesos para cada camada com valores aleatórios
-wp = rand(nep, nnp); // Pesos entre a entrada e a camada oculta 1
-ws = rand(nnp + 1, nns); // Pesos entre a camada oculta 1 e a camada oculta 2 (+1 para o bias)
-wo = rand(nns + 1, nos); // Pesos entre a camada oculta 2 e a saída (+1 para o bias)
-```
-
-- **`wp`**: Matriz de pesos entre a camada de entrada e a camada oculta 1.
-- **`ws`**: Matriz de pesos entre a camada oculta 1 e a camada oculta 2.
-- **`wo`**: Matriz de pesos entre a camada oculta 2 e a camada de saída.
-
-As dimensões das matrizes são definidas com base nos números de neurônios em cada camada.
-
-#### 5. Treinamento da Rede Neural
-
-##### 5.1. Forward Pass
-
-Para cada amostra, a rede processa os dados da entrada até a saída:
-
-```scilab
-// Extração das entradas e do alvo
-x = dados(am, 1:nep); // Entradas (incluindo o bias)
-tg = dados(am, nc); // Alvo (última coluna)
-
-// Camada oculta 1
-y1 = x * wp; // Multiplicação das entradas pelos pesos da primeira camada oculta
-y1 = 1 ./ (1 + exp(-y1)); // Aplicação da função de ativação sigmoide
-y1d = y1 .* (1 - y1); // Cálculo da derivada da sigmoide
-
-// Camada oculta 2
-y2 = [ -1 y1 ] * ws; // Adição do bias e multiplicação pelos pesos da segunda camada oculta
-y2 = 1 ./ (1 + exp(-y2)); // Aplicação da função de ativação sigmoide
-y2d = y2 .* (1 - y2); // Cálculo da derivada da sigmoide
-
-// Camada de saída
-yo = [ -1 y2 ] * wo; // Adição do bias e multiplicação pelos pesos da camada de saída
-yo = 1 ./ (1 + exp(-yo)); // Aplicação da função de ativação sigmoide
-yod = yo .* (1 - yo); // Cálculo da derivada da sigmoide
-```
-
-##### 5.2. Cálculo dos Erros e Deltas
-
-```scilab
-// Cálculo dos deltas (erros)
-Do = tg - yo; // Erro na saída
-Ds = ( yod .* Do )' * wo(2:end, :)'; // Erro na camada oculta 2
-Dp = ( y2d .* Ds' ) * ws(2:end, :)'; // Erro na camada oculta 1
-```
-
-- **`Do`**: Diferença entre o alvo e a saída prevista.
-- **`Ds`**: Delta da camada oculta 2, calculado propagando o erro para trás.
-- **`Dp`**: Delta da camada oculta 1, calculado propagando o erro para trás.
-
-##### 5.3. Backpropagation e Atualização dos Pesos
-
-```scilab
-// Atualização dos pesos
-// Camada de saída
-wod = [ -1 y2 ]' * ( n * yod .* Do ); // Cálculo da variação dos pesos
-wo = wo + wod; // Atualização dos pesos
-
-// Camada oculta 2
-wsd = [ -1 y1 ]' * ( n * Ds' .* y2d' ); // Cálculo da variação dos pesos
-ws = ws + wsd; // Atualização dos pesos
-
-// Camada oculta 1
-wpd = x' * ( n * Dp .* y1d ); // Cálculo da variação dos pesos
-wp = wp + wpd; // Atualização dos pesos
-```
-
-- Os pesos são atualizados subindo o gradiente, ajustando-se para minimizar o erro.
-
-#### 6. Teste da Rede Neural
-
-Após o treinamento, a rede é testada com os mesmos dados:
-
-```scilab
-for am = 1:na
-    x = dados(am, 1:nep); // Entradas (incluindo o bias)
-    tg = dados(am, nc); // Alvo (última coluna)
-    
-    // Forward pass
-    y1 = x * wp;
-    y1 = 1 ./ (1 + exp(-y1));
-    
-    y2 = [ -1 y1 ] * ws;
-    y2 = 1 ./ (1 + exp(-y2));
-    
-    yo = [ -1 y2 ] * wo;
-    yo = 1 ./ (1 + exp(-yo));
-    
-    // Exibir a saída prevista e o alvo
-    printf("Entrada: %s, Saída prevista: %.2f, Alvo: %.2f\n", string(x(2:$)), yo, tg);
-end
-```
-
-- O código realiza um **forward pass** para cada amostra e exibe a saída prevista junto com o alvo desejado.
-
----
-
-### Detalhes do Algoritmo
-
-#### A. Forward Pass Detalhado
-
-1. **Entrada para Camada Oculta 1:**
-
-   - **Cálculo:** `y1 = x * wp`
-     - `x`: Vetor de entrada `[1 x nep]`.
-     - `wp`: Matriz de pesos `[nep x nnp]`.
-     - `y1`: Resultado `[1 x nnp]`.
-
-   - **Aplicação da Função de Ativação Sigmoide:**
-     - `y1 = 1 ./ (1 + exp(-y1))`
-
-2. **Camada Oculta 1 para Camada Oculta 2:**
-
-   - **Adição do Bias:** `[ -1 y1 ]`
-     - Adiciona o bias à saída da camada oculta 1.
-     - Resultado: Vetor `[1 x (nnp + 1)]`.
-
-   - **Cálculo:** `y2 = [ -1 y1 ] * ws`
-     - `ws`: Matriz de pesos `[ (nnp + 1) x nns ]`.
-     - `y2`: Resultado `[1 x nns]`.
-
-   - **Aplicação da Função de Ativação Sigmoide:**
-     - `y2 = 1 ./ (1 + exp(-y2))`
-
-3. **Camada Oculta 2 para Saída:**
-
-   - **Adição do Bias:** `[ -1 y2 ]`
-     - Adiciona o bias à saída da camada oculta 2.
-     - Resultado: Vetor `[1 x (nns + 1)]`.
-
-   - **Cálculo:** `yo = [ -1 y2 ] * wo`
-     - `wo`: Matriz de pesos `[ (nns + 1) x nos ]`.
-     - `yo`: Resultado `[1 x nos]`.
-
-   - **Aplicação da Função de Ativação Sigmoide:**
-     - `yo = 1 ./ (1 + exp(-yo))`
-
-#### B. Backpropagation Detalhado
-
-1. **Erro na Saída:**
-
-   - **Cálculo do Erro:** `Do = tg - yo`
-
-2. **Cálculo do Delta da Camada de Saída:**
-
-   - **Derivada da Função de Ativação:** `yod = yo .* (1 - yo)`
-   - **Delta da Saída:** `delta_o = yod .* Do`
-
-3. **Propagação do Erro para Camada Oculta 2:**
-
-   - **Cálculo:** `Ds = delta_o * wo(2:end, :)'`
-     - `wo(2:end, :)`: Pesos sem o bias.
-     - `Ds`: Delta da camada oculta 2.
-
-   - **Derivada da Função de Ativação:** `y2d = y2 .* (1 - y2)`
-   - **Delta da Camada Oculta 2:** `delta_s = Ds .* y2d`
-
-4. **Propagação do Erro para Camada Oculta 1:**
-
-   - **Cálculo:** `Dp = delta_s * ws(2:end, :)'`
-     - `ws(2:end, :)`: Pesos sem o bias.
-     - `Dp`: Delta da camada oculta 1.
-
-   - **Derivada da Função de Ativação:** `y1d = y1 .* (1 - y1)`
-   - **Delta da Camada Oculta 1:** `delta_p = Dp .* y1d`
-
-5. **Atualização dos Pesos:**
-
-   - **Camada de Saída:**
-     - `wo = wo + [ -1 y2 ]' * ( n * delta_o )`
-
-   - **Camada Oculta 2:**
-     - `ws = ws + [ -1 y1 ]' * ( n * delta_s )`
-
-   - **Camada Oculta 1:**
-     - `wp = wp + x' * ( n * delta_p )`
-
----
-
-### Considerações Finais
-
-Este código implementa uma rede neural feedforward com backpropagation, automatizando a definição dos parâmetros com base nos dados fornecidos. Com essa abordagem, você pode utilizar o mesmo código para diferentes conjuntos de dados, desde que mantenha o formato esperado.
-
-Para obter melhores resultados, é importante:
-
-- **Normalizar os dados de entrada**, especialmente se eles estiverem em diferentes escalas.
-- **Ajustar a taxa de aprendizagem** (`n`) conforme necessário.
-- **Experimentar com o número de neurônios** nas camadas ocultas para encontrar a configuração ideal para o seu problema.
-
----
-
-## Explicação Resumida
-
-### Descrição Geral
-
-O código implementa uma rede neural feedforward com duas camadas ocultas em Scilab, capaz de ajustar automaticamente seus parâmetros com base nos dados fornecidos. O treinamento é realizado usando o algoritmo de backpropagation.
-
-### Funcionamento do Código
-
-1. **Preparação do Ambiente:**
-   - Limpa as variáveis e o console.
-
-2. **Carregamento dos Dados:**
-   - Lê os dados do arquivo `dados.csv`.
-   - Espera que o bias (`-1`) esteja incluído nos dados.
-
-3. **Definição Automática dos Parâmetros:**
-   - Calcula o número de amostras (`na`), entradas (`nep`), e colunas (`nc`) a partir dos dados.
-   - Define o número de neurônios nas camadas ocultas (`nnp`, `nns`) com base em fórmulas que dependem de `nep`.
-   - Define a taxa de aprendizagem (`n`).
-
-4. **Inicialização dos Pesos:**
-   - Inicializa os pesos das camadas (`wp`, `ws`, `wo`) com valores aleatórios.
-
-5. **Treinamento da Rede:**
-   - Para cada época e amostra:
-     - Realiza o **forward pass** através das camadas, aplicando a função de ativação sigmoide.
-     - Calcula o erro entre a saída prevista e o alvo.
-     - Propaga o erro para trás (**backpropagation**), calculando os deltas.
-     - Atualiza os pesos das camadas com base nos deltas e na taxa de aprendizagem.
-
-6. **Teste da Rede:**
-   - Após o treinamento, testa a rede com os dados de entrada.
-   - Exibe a saída prevista e o alvo para cada amostra.
-
-### Como Utilizar com Seus Próprios Dados
-
-- **Formato dos Dados:**
-  - O arquivo `dados.csv` deve incluir o bias na primeira coluna, seguido pelas features e pelo alvo na última coluna.
-
-- **Automatização:**
-  - O código ajusta automaticamente o número de entradas e as dimensões das matrizes com base nos dados.
-  - Você só precisa fornecer o arquivo de dados no formato correto.
-
-### Observações
-
-- **Bias Incluído nos Dados:**
-  - Certifique-se de incluir o bias (`-1`) nos dados para evitar duplicação.
-
-- **Ajuste de Parâmetros:**
-  - Você pode ajustar a taxa de aprendizagem (`n`) e as fórmulas que definem o número de neurônios nas camadas ocultas conforme necessário.
-
-- **Normalização dos Dados:**
-  - Recomenda-se normalizar os dados de entrada para melhorar o desempenho da rede.
-
----
-
-# Código Refatorado
+## Código Completo
 
 ```scilab
 // Limpar variáveis e console
@@ -432,21 +128,24 @@ for epoca = 1:max_epocas
 
         // Cálculo dos deltas (erros)
         Do = tg - yo; // [1 x nos]
-        Ds = ( yod .* Do )' * wo(2:end, :)'; // [nos x 1] * [nos x nns] = [nns x 1]
-        Dp = ( y2d .* Ds' ) * ws(2:end, :)'; // [1 x nns] * [nns x nnp] = [1 x nnp]
+        delta_o = yod .* Do; // Delta da saída
+
+        // Backpropagation
+        Ds = delta_o * wo(2:end, :)'; // [1 x nos] * [nos x nns] = [1 x nns]
+        delta_s = Ds .* y2d; // Delta da camada oculta 2
+
+        Dp = delta_s * ws(2:end, :)'; // [1 x nns] * [nns x nnp] = [1 x nnp]
+        delta_p = Dp .* y1d; // Delta da camada oculta 1
 
         // Atualização dos pesos
         // Camada de saída
-        wod = [ -1 y2 ]' * ( n * yod .* Do ); // [ (nns + 1) x 1 ] * [1 x nos] = [ (nns + 1) x nos ]
-        wo = wo + wod;
+        wo = wo + [ -1 y2 ]' * ( n * delta_o ); // [ (nns + 1) x 1 ] * [1 x nos] = [ (nns + 1) x nos ]
 
         // Camada oculta 2
-        wsd = [ -1 y1 ]' * ( n * Ds' .* y2d' ); // [ (nnp + 1) x 1 ] * [1 x nns ] = [ (nnp + 1) x nns ]
-        ws = ws + wsd;
+        ws = ws + [ -1 y1 ]' * ( n * delta_s ); // [ (nnp + 1) x 1 ] * [1 x nns ] = [ (nnp + 1) x nns ]
 
         // Camada oculta 1
-        wpd = x' * ( n * Dp .* y1d ); // [ nep x 1 ] * [1 x nnp ] = [ nep x nnp ]
-        wp = wp + wpd;
+        wp = wp + x' * ( n * delta_p ); // [ nep x 1 ] * [1 x nnp ] = [ nep x nnp ]
     end
 
     // (Opcional) Exibir progresso a cada 10000 épocas
@@ -471,6 +170,282 @@ for am = 1:na
     yo = 1 ./ (1 + exp(-yo));
 
     // Exibir a saída prevista e o alvo
-    printf("Entrada: %s, Saída prevista: %.2f, Alvo: %.2f\n", string(x(2:$)), yo, tg);
+    printf("Entrada: %s, Saída prevista: %.4f, Alvo: %.4f\n", string(x(2:$)), yo, tg);
 end
 ```
+
+---
+
+## Explicação Detalhada do Código e do Algoritmo
+
+### 1. Preparação do Ambiente
+
+```scilab
+// Limpar variáveis e console
+clear;
+clc;
+```
+
+- **`clear;`**: Remove todas as variáveis do ambiente de trabalho para evitar conflitos.
+- **`clc;`**: Limpa a janela de comando para uma visualização limpa.
+
+### 2. Carregamento dos Dados
+
+```scilab
+// Carregar dados a partir de um arquivo externo
+dados = csvRead('dados.csv');
+```
+
+- **`csvRead('dados.csv');`**: Lê os dados do arquivo `dados.csv` e armazena na variável `dados`.
+- **Formato esperado do arquivo `dados.csv`:**
+  - **Primeira coluna:** Bias (`-1`).
+  - **Colunas seguintes:** Features (entradas).
+  - **Última coluna:** Alvo (saída desejada).
+
+### 3. Definição dos Parâmetros da Rede Neural
+
+```scilab
+// Determinar o número de entradas e saídas automaticamente
+na = size(dados, 1); // Número de amostras
+nc = size(dados, 2); // Número de colunas no arquivo de dados
+
+// Como o bias está incluído nos dados, o número de entradas é:
+nep = nc - 1; // Número de entradas (incluindo o bias)
+
+// Definir o número de neurônios nas camadas ocultas
+nnp = floor((nep + 1) * 1.5); // Número de neurônios na camada oculta 1
+nns = floor(nnp * 0.8); // Número de neurônios na camada oculta 2
+
+// Número de saídas
+nos = 1; // Assumindo uma única saída
+
+// Taxa de aprendizagem
+n = 0.6;
+```
+
+- **`na`**: Número de amostras nos dados.
+- **`nc`**: Número de colunas nos dados.
+- **`nep`**: Número de entradas, incluindo o bias.
+- **`nnp`**: Número de neurônios na camada oculta 1. Calculado como 1.5 vezes o número de entradas mais 1.
+- **`nns`**: Número de neurônios na camada oculta 2. Calculado como 80% do número de neurônios da camada oculta 1.
+- **`nos`**: Número de saídas. Aqui, está definido como 1.
+- **`n`**: Taxa de aprendizagem utilizada na atualização dos pesos.
+
+### 4. Inicialização dos Pesos
+
+```scilab
+// Inicialização dos pesos para cada camada com valores aleatórios
+wp = rand(nep, nnp); // Pesos entre a entrada e a camada oculta 1
+ws = rand(nnp + 1, nns); // Pesos entre a camada oculta 1 e a camada oculta 2 (+1 para o bias)
+wo = rand(nns + 1, nos); // Pesos entre a camada oculta 2 e a saída (+1 para o bias)
+```
+
+- **`wp`**: Matriz de pesos entre a camada de entrada e a camada oculta 1.
+- **`ws`**: Matriz de pesos entre a camada oculta 1 e a camada oculta 2.
+- **`wo`**: Matriz de pesos entre a camada oculta 2 e a camada de saída.
+- **Observação sobre o Bias:** O `+1` nas dimensões de `ws` e `wo` é para acomodar o bias adicional nas camadas ocultas.
+
+### 5. Treinamento da Rede Neural
+
+#### 5.1. Forward Pass (Propagação para Frente)
+
+Para cada amostra, a rede processa os dados da entrada até a saída:
+
+```scilab
+// Extração das entradas e do alvo
+x = dados(am, 1:nep); // Entradas (incluindo o bias)
+tg = dados(am, nc); // Alvo (última coluna)
+
+// Camada oculta 1
+y1 = x * wp; // Multiplicação das entradas pelos pesos da primeira camada oculta
+y1 = 1 ./ (1 + exp(-y1)); // Aplicação da função de ativação sigmoide
+y1d = y1 .* (1 - y1); // Cálculo da derivada da sigmoide
+
+// Camada oculta 2
+y2 = [ -1 y1 ] * ws; // Adição do bias e multiplicação pelos pesos da segunda camada oculta
+y2 = 1 ./ (1 + exp(-y2)); // Aplicação da função de ativação sigmoide
+y2d = y2 .* (1 - y2); // Cálculo da derivada da sigmoide
+
+// Camada de saída
+yo = [ -1 y2 ] * wo; // Adição do bias e multiplicação pelos pesos da camada de saída
+yo = 1 ./ (1 + exp(-yo)); // Aplicação da função de ativação sigmoide
+yod = yo .* (1 - yo); // Cálculo da derivada da sigmoide
+```
+
+- **Camada Oculta 1:**
+  - **Entrada:** `x` (incluindo o bias).
+  - **Processamento:** Multiplicação por `wp` e aplicação da função de ativação.
+- **Camada Oculta 2:**
+  - **Entrada:** Saída da camada oculta 1 com bias adicionado.
+  - **Processamento:** Multiplicação por `ws` e aplicação da função de ativação.
+- **Camada de Saída:**
+  - **Entrada:** Saída da camada oculta 2 com bias adicionado.
+  - **Processamento:** Multiplicação por `wo` e aplicação da função de ativação.
+  
+#### 5.2. Backpropagation (Retropropagação do Erro)
+
+```scilab
+// Cálculo dos deltas (erros)
+Do = tg - yo; // Erro na saída
+delta_o = yod .* Do; // Delta da saída
+
+// Backpropagation
+Ds = delta_o * wo(2:end, :)'; // Propagação do erro para a camada oculta 2
+delta_s = Ds .* y2d; // Delta da camada oculta 2
+
+Dp = delta_s * ws(2:end, :)'; // Propagação do erro para a camada oculta 1
+delta_p = Dp .* y1d; // Delta da camada oculta 1
+```
+
+- **Erro na Saída (`Do`):** Diferença entre o alvo e a saída prevista.
+- **Delta da Saída (`delta_o`):** Produto do erro pela derivada da função de ativação.
+- **Propagação do Erro:**
+  - **Para a Camada Oculta 2:** Usando os pesos `wo` (sem o bias) e o delta da saída.
+  - **Para a Camada Oculta 1:** Usando os pesos `ws` (sem o bias) e o delta da camada oculta 2.
+  
+#### 5.3. Atualização dos Pesos
+
+```scilab
+// Atualização dos pesos
+// Camada de saída
+wo = wo + [ -1 y2 ]' * ( n * delta_o ); // Atualização dos pesos da camada de saída
+
+// Camada oculta 2
+ws = ws + [ -1 y1 ]' * ( n * delta_s ); // Atualização dos pesos da camada oculta 2
+
+// Camada oculta 1
+wp = wp + x' * ( n * delta_p ); // Atualização dos pesos da camada oculta 1
+```
+
+- Os pesos são atualizados subindo o gradiente, ajustando-se para minimizar o erro.
+- **Taxa de Aprendizagem (`n`):** Controla o tamanho dos passos na direção do gradiente.
+
+### 6. Teste da Rede Neural
+
+Após o treinamento, a rede é testada com os mesmos dados:
+
+```scilab
+for am = 1:na
+    x = dados(am, 1:nep); // Entradas (incluindo o bias)
+    tg = dados(am, nc); // Alvo (última coluna)
+
+    // Forward pass
+    y1 = x * wp;
+    y1 = 1 ./ (1 + exp(-y1));
+
+    y2 = [ -1 y1 ] * ws;
+    y2 = 1 ./ (1 + exp(-y2));
+
+    yo = [ -1 y2 ] * wo;
+    yo = 1 ./ (1 + exp(-yo));
+
+    // Exibir a saída prevista e o alvo
+    printf("Entrada: %s, Saída prevista: %.4f, Alvo: %.4f\n", string(x(2:$)), yo, tg);
+end
+```
+
+- **Forward Pass:** Realiza novamente a propagação para frente para cada amostra.
+- **Exibição dos Resultados:** Mostra as entradas (excluindo o bias), a saída prevista e o alvo.
+
+---
+
+## Explicação Matemática Passo a Passo
+
+### A. Forward Pass Detalhado
+
+1. **Camada de Entrada para Camada Oculta 1**
+
+   - **Entrada:** Vetor `x` com dimensão `[1 x nep]`.
+   - **Pesos:** Matriz `wp` com dimensão `[nep x nnp]`.
+   - **Processamento:**
+     - **Produto Linear:** `z1 = x * wp` resulta em um vetor `[1 x nnp]`.
+     - **Função de Ativação (Sigmoide):** `y1 = σ(z1)`, onde `σ(z) = 1 / (1 + e^{-z})`.
+
+2. **Camada Oculta 1 para Camada Oculta 2**
+
+   - **Entrada:** Saída `y1` com dimensão `[1 x nnp]`.
+   - **Adição do Bias:** `[ -1 y1 ]` resulta em `[1 x (nnp + 1)]`.
+   - **Pesos:** Matriz `ws` com dimensão `[ (nnp + 1) x nns ]`.
+   - **Processamento:**
+     - **Produto Linear:** `z2 = [ -1 y1 ] * ws` resulta em `[1 x nns]`.
+     - **Função de Ativação (Sigmoide):** `y2 = σ(z2)`.
+
+3. **Camada Oculta 2 para Camada de Saída**
+
+   - **Entrada:** Saída `y2` com dimensão `[1 x nns]`.
+   - **Adição do Bias:** `[ -1 y2 ]` resulta em `[1 x (nns + 1)]`.
+   - **Pesos:** Matriz `wo` com dimensão `[ (nns + 1) x nos ]`.
+   - **Processamento:**
+     - **Produto Linear:** `z3 = [ -1 y2 ] * wo` resulta em `[1 x nos]`.
+     - **Função de Ativação (Sigmoide):** `yo = σ(z3)`.
+
+### B. Backpropagation Detalhado
+
+1. **Erro na Saída**
+
+   - **Erro:** `Do = tg - yo`, onde `tg` é o alvo e `yo` é a saída prevista.
+   - **Delta da Saída:** `delta_o = yod .* Do`, onde `yod = yo .* (1 - yo)` é a derivada da função sigmoide aplicada à saída.
+
+2. **Propagação do Erro para a Camada Oculta 2**
+
+   - **Pesos da Camada de Saída (Sem Bias):** `wo_sem_bias = wo(2:end, :)` com dimensão `[nns x nos]`.
+   - **Cálculo do Erro:** `Ds = delta_o * wo_sem_bias'` resulta em `[1 x nns]`.
+   - **Delta da Camada Oculta 2:** `delta_s = Ds .* y2d`, onde `y2d = y2 .* (1 - y2)`.
+
+3. **Propagação do Erro para a Camada Oculta 1**
+
+   - **Pesos da Camada Oculta 2 (Sem Bias):** `ws_sem_bias = ws(2:end, :)` com dimensão `[nnp x nns]`.
+   - **Cálculo do Erro:** `Dp = delta_s * ws_sem_bias'` resulta em `[1 x nnp]`.
+   - **Delta da Camada Oculta 1:** `delta_p = Dp .* y1d`, onde `y1d = y1 .* (1 - y1)`.
+
+### C. Atualização dos Pesos Detalhada
+
+1. **Camada de Saída**
+
+   - **Gradiente dos Pesos:** `∇wo = [ -1 y2 ]' * ( n * delta_o )`
+     - Dimensões:
+       - `[ -1 y2 ]'` é `[ (nns + 1) x 1 ]`.
+       - `delta_o` é `[1 x nos]`.
+       - Resultado: `[ (nns + 1) x nos ]`.
+   - **Atualização dos Pesos:** `wo = wo + ∇wo`
+
+2. **Camada Oculta 2**
+
+   - **Gradiente dos Pesos:** `∇ws = [ -1 y1 ]' * ( n * delta_s )`
+     - Dimensões:
+       - `[ -1 y1 ]'` é `[ (nnp + 1) x 1 ]`.
+       - `delta_s` é `[1 x nns]`.
+       - Resultado: `[ (nnp + 1) x nns ]`.
+   - **Atualização dos Pesos:** `ws = ws + ∇ws`
+
+3. **Camada Oculta 1**
+
+   - **Gradiente dos Pesos:** `∇wp = x' * ( n * delta_p )`
+     - Dimensões:
+       - `x'` é `[ nep x 1 ]`.
+       - `delta_p` é `[1 x nnp]`.
+       - Resultado: `[ nep x nnp ]`.
+   - **Atualização dos Pesos:** `wp = wp + ∇wp`
+
+---
+
+## Considerações Finais
+
+Este documento apresentou a implementação detalhada de uma rede neural feedforward com duas camadas ocultas em Scilab, utilizando o algoritmo de Backpropagation para o treinamento. O código foi explicado em detalhes, incluindo as etapas matemáticas do forward pass, backpropagation e atualização dos pesos.
+
+**Dicas para Melhorias e Ajustes:**
+
+- **Normalização dos Dados:** É recomendável normalizar os dados de entrada para melhorar o desempenho da rede.
+- **Ajuste da Taxa de Aprendizagem:** A taxa de aprendizagem (`n`) pode ser ajustada conforme necessário. Valores muito altos podem causar instabilidade, enquanto valores muito baixos podem tornar o treinamento muito lento.
+- **Número de Neurônios nas Camadas Ocultas:** Experimente ajustar o número de neurônios nas camadas ocultas (`nnp`, `nns`) para encontrar a configuração que melhor se adapta ao seu problema específico.
+- **Funções de Ativação Alternativas:** Embora a função sigmoide seja utilizada neste exemplo, outras funções de ativação (como ReLU, tanh) podem ser testadas para verificar se melhoram o desempenho.
+
+---
+
+## Referências
+
+- **Goodfellow, I., Bengio, Y., & Courville, A. (2016).** Deep Learning. MIT Press.
+- **Haykin, S. (1999).** Neural Networks: A Comprehensive Foundation. Prentice Hall.
+- **Bishop, C. M. (1995).** Neural Networks for Pattern Recognition. Oxford University Press.
+
+---
