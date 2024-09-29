@@ -1,153 +1,215 @@
+// Otimização do Ângulo de Inclinação de Painéis Solares utilizando Algoritmo Genético
+// Autor: [Seu Nome]
+// Data: [Data Atual]
+
 clear;
 clc;
 
-// Parâmetros do problema
-npop = 1000;              // Tamanho da população
-rmin = 15;                // Ângulo mínimo de inclinação (graus)
-rmax = 60;                // Ângulo máximo de inclinação (graus)
-eta = 0.15;               // Eficiência do painel (15%)
-I_direct = 800;           // Irradiância direta em W/m²
-I_diffuse = 200;          // Irradiância difusa em W/m²
-albedo = 0.2;             // Reflexividade do solo
-system_efficiency = 0.90; // Eficiência do sistema (90%)
-temperature = 35;         // Temperatura ambiente em °C
-temp_coefficient = -0.005;// -0.5% por °C
-degradation_rate = 0.005; // 0.5% por ano
-age = 5;                  // Idade do painel em anos
-maintenance_factor = 0.95;// 5% de perda devido à sujeira
-theta_sun = 35;           // Ângulo do sol constante (graus)
-delta = 2;                // Correção do ângulo de incidência (graus)
+// =============================
+// Parâmetros do Problema
+// =============================
 
-// Inicialização da população
-pop = [];
-bestpop = 0;
-bestcusto = -%inf; // Inicializa com valor muito baixo para garantir atualização
+// Tamanho da população
+NPOP = 1000;
 
-for i = 1:npop
-    pop(i) = rand()*(rmax - rmin) + rmin;
+// Intervalo de ângulos de inclinação (em graus)
+ANGULO_MIN = 15;    // Ângulo mínimo de inclinação
+ANGULO_MAX = 60;    // Ângulo máximo de inclinação
+
+// Eficiência inicial do painel solar
+EFICIENCIA = 0.15;  // 15%
+
+// Irradiância solar
+IRRADIANCIA_DIRETA = 800;    // Irradiância direta em W/m²
+IRRADIANCIA_DIFUSA = 200;    // Irradiância difusa em W/m²
+
+// Albedo do solo (reflexividade)
+ALBEDO = 0.2;  // Superfície de concreto tem albedo ~0.2
+
+// Eficiência do sistema (considerando perdas nos componentes)
+EFICIENCIA_SISTEMA = 0.90; // 90%
+
+// Condições ambientais
+TEMPERATURA_AMBIENTE = 35;    // Temperatura ambiente em °C
+COEFICIENTE_TEMPERATURA = -0.005; // -0.5% por °C
+
+// Degradação do painel ao longo do tempo
+TAXA_DEGRAUACAO = 0.005; // 0.5% por ano
+IDADE_PAINEIS = 5;        // Idade dos painéis em anos
+
+// Fator de manutenção (sujeira e limpeza)
+FATOR_MANUTENCAO = 0.95; // 5% de perda devido à sujeira
+
+// Ângulo do sol constante (em graus)
+ANGULO_SOL = 35;
+
+// Correção do ângulo de incidência (em graus)
+DELTA = 2;
+
+// =============================
+// Inicialização da População
+// =============================
+
+POPULACAO = [];
+MELHOR_POPULACAO = 0;
+MELHOR_CUSTO = -%inf; // Inicializa com valor muito baixo para garantir atualização
+
+// Geração inicial da população com ângulos aleatórios dentro do intervalo
+for i = 1:NPOP
+    POPULACAO(i) = rand()*(ANGULO_MAX - ANGULO_MIN) + ANGULO_MIN;
 end
 
-// Inicializar vetor para armazenar o melhor custo por época (opcional para visualização)
-melhores_custos = [];
+// Vetor para armazenar o melhor custo por época (opcional para visualização)
+MELHORES_CUSTOS = [];
 
-// Iterações do algoritmo genético
-for epoca = 1:1000
-    custo = []; // Vetor de fitness (produção de energia)
+// =============================
+// Iterações do Algoritmo Genético
+// =============================
+
+for EPOCA = 1:1000
+    CUSTO = []; // Vetor de fitness (produção de energia)
     
-    // Cálculo do fitness para cada indivíduo
-    for i = 1:npop
-        angle_inclinacao = pop(i);
+    // Cálculo do fitness para cada indivíduo na população
+    for i = 1:NPOP
+        ANGULO_INCLINACAO = POPULACAO(i);
         
-        // Calcular o ângulo de incidência relativo e corrigido
-        angulo_inc = angle_inclinacao - theta_sun;
-        if angulo_inc < 0 then
-            angulo_inc = -angulo_inc;
+        // Calcular o ângulo de incidência relativo
+        ANGULO_INC = ANGULO_INCLINACAO - ANGULO_SOL;
+        if ANGULO_INC < 0 then
+            ANGULO_INC = -ANGULO_INC;
         end
-        if angulo_inc > 90 then
-            angulo_inc = 90;
-        end
-        angulo_inc_corrigido = angulo_inc + delta;
-        if angulo_inc_corrigido < 0 then
-            angulo_inc_corrigido = -angulo_inc_corrigido;
-        end
-        if angulo_inc_corrigido > 90 then
-            angulo_inc_corrigido = 90;
+        if ANGULO_INC > 90 then
+            ANGULO_INC = 90;
         end
         
-        // Converter para radianos
-        angulo_inc_rad = angulo_inc_corrigido * %pi / 180;
+        // Aplicar a correção no ângulo de incidência
+        ANGULO_INC_CORRIGIDO = ANGULO_INC + DELTA;
+        if ANGULO_INC_CORRIGIDO < 0 then
+            ANGULO_INC_CORRIGIDO = -ANGULO_INC_CORRIGIDO;
+        end
+        if ANGULO_INC_CORRIGIDO > 90 then
+            ANGULO_INC_CORRIGIDO = 90;
+        end
         
-        // Calcular a eficiência ajustada com temperatura e degradação
-        eta_ajustada = eta * (1 + temp_coefficient * (temperature - 25)) * (1 - degradation_rate * age);
+        // Converter o ângulo de incidência para radianos
+        ANGULO_INC_RAD = ANGULO_INC_CORRIGIDO * %pi / 180;
         
-        // Calcular a irradiância ajustada com manutenção
-        I_direct_ajustado = I_direct * maintenance_factor;
-        I_diffuse_ajustado = I_diffuse * maintenance_factor;
+        // Calcular a eficiência ajustada com base na temperatura e degradação
+        EFICIENCIA_AJUSTADA = EFICIENCIA * (1 + COEFICIENTE_TEMPERATURA * (TEMPERATURA_AMBIENTE - 25)) * (1 - TAXA_DEGRAUACAO * IDADE_PAINEIS);
+        
+        // Ajustar a irradiância considerando a manutenção
+        IRRADIANCIA_DIRETA_AJUSTADA = IRRADIANCIA_DIRETA * FATOR_MANUTENCAO;
+        IRRADIANCIA_DIFUSA_AJUSTADA = IRRADIANCIA_DIFUSA * FATOR_MANUTENCAO;
         
         // Cálculo da energia produzida
-        Energy_direct = I_direct_ajustado * cos(angulo_inc_rad);
-        Energy_diffuse = I_diffuse_ajustado * (1 + cos(angle_inclinacao * %pi / 180)) / 2;
-        Energy_reflected = I_direct_ajustado * albedo * cos(angulo_inc_rad);
-        Energy = (Energy_direct + Energy_diffuse + Energy_reflected) * eta_ajustada * system_efficiency;
+        ENERGIA_DIRETA = IRRADIANCIA_DIRETA_AJUSTADA * cos(ANGULO_INC_RAD);
+        ENERGIA_DIFUSA = IRRADIANCIA_DIFUSA_AJUSTADA * (1 + cos(ANGULO_INCLINACAO * %pi / 180)) / 2;
+        ENERGIA_REFLETIDA = IRRADIANCIA_DIRETA_AJUSTADA * ALBEDO * cos(ANGULO_INC_RAD);
+        
+        // Energia total produzida pelo painel
+        ENERGIA_TOTAL = (ENERGIA_DIRETA + ENERGIA_DIFUSA + ENERGIA_REFLETIDA) * EFICIENCIA_AJUSTADA * EFICIENCIA_SISTEMA;
         
         // Garantir que a energia não seja negativa
-        if Energy < 0 then
-            Energy = 0;
+        if ENERGIA_TOTAL < 0 then
+            ENERGIA_TOTAL = 0;
         end
         
-        custo(i) = Energy;
+        // Armazenar o fitness
+        CUSTO(i) = ENERGIA_TOTAL;
     end
     
-    // Atualização do melhor indivíduo encontrado
-    for i = 1:npop
-        if custo(i) > bestcusto then
-            bestpop = pop(i);
-            bestcusto = custo(i);
-            disp("Época " + string(epoca) + ": Melhor Ângulo = " + string(bestpop) + "°, Energia = " + string(bestcusto) + " W/m²");
+    // Atualização do melhor indivíduo encontrado na época
+    for i = 1:NPOP
+        if CUSTO(i) > MELHOR_CUSTO then
+            MELHOR_POPULACAO = POPULACAO(i);
+            MELHOR_CUSTO = CUSTO(i);
+            disp("Época " + string(EPOCA) + ": Melhor Ângulo = " + string(MELHOR_POPULACAO) + "°, Energia = " + string(MELHOR_CUSTO) + " W/m²");
         end
     end
     
     // Armazenar o melhor custo para visualização (opcional)
-    melhores_custos(epoca) = bestcusto;
+    MELHORES_CUSTOS(EPOCA) = MELHOR_CUSTO;
     
+    // =============================
     // Seleção por Torneio
-    newpopx = [];
-    for i = 1:npop
-        t1 = 0;
-        t2 = 0;
-        while t1 == t2
-            t1 = round(rand()*(npop - 1)) + 1;
-            t2 = round(rand()*(npop - 1)) + 1;     
+    // =============================
+    
+    NOVA_POPULACAO_X = [];
+    for i = 1:NPOP
+        T1 = 0;
+        T2 = 0;
+        // Selecionar dois indivíduos aleatórios para o torneio
+        while T1 == T2
+            T1 = round(rand()*(NPOP - 1)) + 1;
+            T2 = round(rand()*(NPOP - 1)) + 1;
         end
-        if custo(t1) > custo(t2) then
-            newpopx(i) = pop(t1);
+        // Selecionar o indivíduo com maior produção de energia
+        if CUSTO(T1) > CUSTO(T2) then
+            NOVA_POPULACAO_X(i) = POPULACAO(T1);
         else
-            newpopx(i) = pop(t2); 
-        end 
+            NOVA_POPULACAO_X(i) = POPULACAO(T2);
+        end
     end
     
-    newpopy = [];
-    for i = 1:npop
-        t1 = 0;
-        t2 = 0;
-        while t1 == t2
-            t1 = round(rand()*(npop - 1)) + 1;
-            t2 = round(rand()*(npop - 1)) + 1;     
+    NOVA_POPULACAO_Y = [];
+    for i = 1:NPOP
+        T1 = 0;
+        T2 = 0;
+        // Selecionar dois indivíduos aleatórios para o torneio
+        while T1 == T2
+            T1 = round(rand()*(NPOP - 1)) + 1;
+            T2 = round(rand()*(NPOP - 1)) + 1;
         end
-        if custo(t1) > custo(t2) then
-            newpopy(i) = pop(t1);
+        // Selecionar o indivíduo com maior produção de energia
+        if CUSTO(T1) > CUSTO(T2) then
+            NOVA_POPULACAO_Y(i) = POPULACAO(T1);
         else
-            newpopy(i) = pop(t2); 
-        end 
+            NOVA_POPULACAO_Y(i) = POPULACAO(T2);
+        end
     end
     
+    // =============================
     // Crossover (Média Geométrica)
-    newpop = [];
-    for i = 1:npop
-        newpop(i) = sqrt(newpopy(i) * newpopx(i));
+    // =============================
+    
+    NOVA_POPULACAO = [];
+    for i = 1:NPOP
+        NOVA_POPULACAO(i) = sqrt(NOVA_POPULACAO_Y(i) * NOVA_POPULACAO_X(i));
     end
     
-    // Mutação (30% de chance de mutação)
-    for i = 1:npop
+    // =============================
+    // Mutação (30% de chance)
+    // =============================
+    
+    for i = 1:NPOP
         if rand() >= 0.7 then
-            newpop(i) = rand()*(rmax - rmin) + rmin;
+            NOVA_POPULACAO(i) = rand()*(ANGULO_MAX - ANGULO_MIN) + ANGULO_MIN;
         end
     end
     
-    // Atualização da população e preservação do melhor indivíduo
-    pop = newpop;
-    pop(1) = bestpop;
+    // =============================
+    // Atualização da População
+    // =============================
+    
+    POPULACAO = NOVA_POPULACAO;
+    POPULACAO(1) = MELHOR_POPULACAO; // Preservar o melhor indivíduo
 end
 
+// =============================
 // Resultado Final
-disp("-------------------------------------------------");
-disp("Ângulo de Inclinação Ótimo: " + string(bestpop) + " graus");
-disp("Produção de Energia Máxima: " + string(bestcusto) + " W/m²");
+// =============================
 
-// Visualização opcional da evolução da produção de energia
+disp("-------------------------------------------------");
+disp("Ângulo de Inclinação Ótimo: " + string(MELHOR_POPULACAO) + " graus");
+disp("Produção de Energia Máxima: " + string(MELHOR_CUSTO) + " W/m²");
+
+// =============================
+// Visualização da Evolução da Produção de Energia
+// =============================
+
 // Plotar a evolução da produção de energia
 x = 1:1000;
-y = melhores_custos;
+y = MELHORES_CUSTOS;
 plot(x, y);
 xlabel("Época");
 ylabel("Produção de Energia (W/m²)");
