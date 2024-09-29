@@ -1,5 +1,3 @@
----
-
 ## Código Scilab Atualizado com Documentação
 
 ```scilab
