@@ -66,7 +66,7 @@ for epoca = 1:1000
         t2 = 0;
         while t1 == t2
             t1 = round(rand()*(npop - 1)) + 1;
-            t2 = round(rand()*(npop - 1)) + 1;     
+            t2 = round(rand()*(npop - 1)) + 1;   
         end
         if custo(t1) > custo(t2) then
             newpopx(i) = pop(t1);
