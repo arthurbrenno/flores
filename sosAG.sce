@@ -40,7 +40,7 @@ for epoca = 1:1000
         angulo_inc_rad = angulo_inc * %pi / 180;
         
         // Cálculo da energia produzida
-        Energy = modulo(I * cos(angulo_inc_rad) * eta);
+        Energy = I * cos(angulo_inc_rad) * eta;
         
         // Garantir que a energia não seja negativa
         if Energy < 0 then
