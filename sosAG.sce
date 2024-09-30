@@ -1,7 +1,3 @@
-// Otimização do Ângulo de Inclinação de Painéis Solares utilizando Algoritmo Genético
-// Autor: [Seu Nome]
-// Data: [Data Atual]
-
 clear;
 clc;
 
