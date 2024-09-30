@@ -2,8 +2,8 @@
 
 ```scilab
 // Otimização do Ângulo de Inclinação de Painéis Solares utilizando Algoritmo Genético
-// Autor: [Seu Nome]
-// Data: [Data Atual]
+// Autor: Arthur, Caio e Miguel
+// Data: 30/09/2024
 
 clear;
 clc;
